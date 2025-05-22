@@ -134,10 +134,12 @@ categories = {
     "J/P": (30, 40),
 }
 
+# Inisialisasi session state
 if "current_q" not in st.session_state:
     st.session_state.current_q = 0
     st.session_state.answers = []
     st.session_state.category_scores = {"E/I": 0, "S/N": 0, "T/F": 0, "J/P": 0}
+    st.session_state.temp_score = 3  # default slider value
 
 st.title("Tes Kepribadian MBTI")
 st.write("Berikan skor 1-5:")
@@ -149,48 +151,47 @@ def get_category_for_question(idx):
             return cat
     return None
 
-# Fungsi lompat ke pertanyaan pertama kategori berikutnya
 def jump_to_next_category(current_idx):
     for cat, (start, end) in categories.items():
         if current_idx < end:
-            # jika current_idx masih di bawah end kategori ini, lompat ke awal kategori berikutnya
             if current_idx < start:
                 return start
             else:
-                # lompat ke kategori berikutnya jika ada
                 cat_keys = list(categories.keys())
                 current_cat_idx = cat_keys.index(get_category_for_question(current_idx))
                 if current_cat_idx + 1 < len(cat_keys):
                     next_cat = cat_keys[current_cat_idx + 1]
                     return categories[next_cat][0]
                 else:
-                    return 40  # sudah akhir pertanyaan
+                    return 40
     return 40
 
-def advance_question(skor):
+def advance_question():
     idx = st.session_state.current_q
+    skor = st.session_state.temp_score
     cat = get_category_for_question(idx)
     st.session_state.answers.append(skor)
     st.session_state.category_scores[cat] += skor
 
-    # Cek threshold kategori saat ini
     if st.session_state.category_scores[cat] >= threshold:
-        # Lompat ke kategori berikutnya
-        next_q = jump_to_next_category(idx)
-        st.session_state.current_q = next_q
+        st.session_state.current_q = jump_to_next_category(idx)
     else:
         st.session_state.current_q += 1
 
-st.write(f"**Pertanyaan {st.session_state.current_q + 1} dari {len(questions)}**")
-
+# Menampilkan pertanyaan
 if st.session_state.current_q < len(questions):
-    skor = st.slider(questions[st.session_state.current_q], 1, 5, 3, key=f"slider_{st.session_state.current_q}")
+    st.write(f"**Pertanyaan {st.session_state.current_q + 1} dari {len(questions)}**")
+    
+    # Slider hanya untuk menyimpan nilai sementara
+    st.session_state.temp_score = st.slider(
+        questions[st.session_state.current_q], 1, 5, st.session_state.temp_score, key=f"slider_{st.session_state.current_q}"
+    )
 
     if st.button("Pertanyaan Berikutnya"):
-        advance_question(skor)
-        st.stop() 
-
+        advance_question()
+        st.experimental_rerun()
 else:
+    # Menampilkan hasil
     e_score = st.session_state.category_scores["E/I"]
     s_score = st.session_state.category_scores["S/N"]
     t_score = st.session_state.category_scores["T/F"]
@@ -211,7 +212,7 @@ else:
         st.write(f"{i}. {job}")
 
     if st.button("Ulangi Tes"):
-        st.session_state.current_q = 0
-        st.session_state.answers = []
-        st.session_state.category_scores = {"E/I": 0, "S/N": 0, "T/F": 0, "J/P": 0}
+        for k in ["current_q", "answers", "category_scores", "temp_score"]:
+            if k in st.session_state:
+                del st.session_state[k]
         st.experimental_rerun()
