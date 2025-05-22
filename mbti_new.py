@@ -188,11 +188,7 @@ if st.session_state.current_q < len(questions):
 
     if st.button("Pertanyaan Berikutnya"):
         advance_question(skor)
-        st.session_state.trigger_rerun = True
-
-    if st.session_state.get("trigger_rerun", False):
-        st.session_state.trigger_rerun = False
-        st.experimental_rerun()
+        st.stop() 
 
 else:
     e_score = st.session_state.category_scores["E/I"]
