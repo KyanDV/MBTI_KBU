@@ -188,7 +188,7 @@ if st.session_state.current_q < len(questions):
 
     if st.button("Pertanyaan Berikutnya"):
         advance_question(skor)
-        st.experimental_rerun()
+        st.stop() 
 else:
     e_score = st.session_state.category_scores["E/I"]
     s_score = st.session_state.category_scores["S/N"]
